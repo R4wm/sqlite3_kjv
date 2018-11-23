@@ -11,27 +11,32 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// Verse the complete verse context
 type Verse struct {
-	Book    string
-	Chapter int
-	Verse   int
-	Text    string
+	IsNumberedBook bool
+	Book           string
+	Chapter        int
+	Verse          int
+	Text           string
 }
 
 //ParseChapterVerse extract chapter and verse from x:x format
 func ParseChapterVerse(colonJoined string) (int, int) {
 	fmt.Printf("colonJoined: %v\n", colonJoined)
 
-	result := strings.Split(colonJoined, ":")
-	ch, err := strconv.Atoi(result[0])
+	splitChapterVerse := strings.Split(colonJoined, ":")
+
+	chapter, err := strconv.Atoi(splitChapterVerse[0])
 	if err != nil {
 		panic(err)
 	}
-	v, err := strconv.Atoi(result[1])
+
+	verseNum, err := strconv.Atoi(splitChapterVerse[1])
 	if err != nil {
 		panic(err)
 	}
-	return ch, v
+
+	return chapter, verseNum
 
 }
 
