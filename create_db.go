@@ -1,4 +1,4 @@
-package main
+package kjvapi
 
 import (
 	"bufio"
@@ -83,7 +83,7 @@ func PrepareDB(verse <-chan Verse, dbPath string) {
 }
 
 //CreateKJVDB pulls down KJV raw text file, parses and creates database
-func CreateKJVDB() {
+func CreateKJVDB(dbpath string) string {
 	fmt.Println("Starting sqlite3 db creation. ")
 
 	url := "https://raw.githubusercontent.com/R4wm/bible/master/data/bible.txt"
@@ -96,7 +96,7 @@ func CreateKJVDB() {
 
 	defer resp.Body.Close()
 
-	go PrepareDB(dbInsert, "/tmp/kjv.db")
+	go PrepareDB(dbInsert, dbpath)
 
 	scanner := bufio.NewScanner(resp.Body)
 
@@ -126,8 +126,6 @@ func CreateKJVDB() {
 	}
 
 	close(dbInsert)
-}
 
-func main() {
-	CreateKJVDB()
+	return "dbpath"
 }

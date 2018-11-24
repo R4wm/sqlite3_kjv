@@ -81,5 +81,18 @@ result
 @arch-lt ~/go/src/github.com/r4wm>
 ```
 
+## Create your own KJV database
+```go
+package main
 
+import (
+	"fmt"
 
+	"github.com/r4wm/kjvapi"
+)
+
+func main() {
+	fmt.Println("Starting kjv database generation")
+	kjvapi.CreateKJVDB("/tmp/kjv.db")
+}
+```
