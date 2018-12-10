@@ -20,6 +20,9 @@ type Verse struct {
 	Chapter        int
 	Verse          int
 	Text           string
+	Testament      string
+	OrdinalVerse   int
+	OrdinalBook    int
 }
 
 //ParseChapterVerse extract chapter and verse from x:x format
@@ -66,10 +69,10 @@ func PrepareDB(verse <-chan Verse, dbPath string) {
 	defer database.Close()
 
 	//Prep new database
-	statement, _ := database.Prepare("create table if not exists kjv(book string not null, chapter int, verse int, text string)")
+	statement, _ := database.Prepare("create table if not exists kjv(book string not null, chapter int, verse int, text string, ordinal_verse int, ordinal_book int, testament string)")
 	statement.Exec()
 
-	sqlInsertStr := `INSERT OR REPLACE INTO kjv(book, chapter, verse, text) values(?, ?, ?, ?)`
+	sqlInsertStr := `INSERT OR REPLACE INTO kjv(book, chapter, verse, text, ordinal_verse, ordinal_book, testament) values(?, ?, ?, ?, ?, ?, ?)`
 	stmt, err := database.Prepare(sqlInsertStr)
 	if err != nil {
 		panic(err)
@@ -78,7 +81,7 @@ func PrepareDB(verse <-chan Verse, dbPath string) {
 	//Populate, put into database as they come
 	defer stmt.Close()
 	for v := range verse {
-		stmt.Exec(v.Book, v.Chapter, v.Verse, v.Text)
+		stmt.Exec(v.Book, v.Chapter, v.Verse, v.Text, v.OrdinalVerse, v.OrdinalBook, v.Testament)
 	}
 }
 
@@ -100,10 +103,25 @@ func CreateKJVDB(dbpath string) string {
 
 	scanner := bufio.NewScanner(resp.Body)
 
+	verseCount := 0
+	bookCount := 0
+	bookNameState := ""
+	bookTestament := "Old"
 	for scanner.Scan() {
+		verseCount += 1
 		verse := Verse{}
 		brokenString := strings.Fields(scanner.Text())
 		fmt.Println("broken: ", brokenString)
+
+		// First book of the New Testament
+		if brokenString[0] == "Matthew" {
+			bookTestament = "New"
+		}
+
+		if brokenString[0] != bookNameState {
+			bookNameState = brokenString[0]
+			bookCount += 1
+		}
 
 		if brokenString[0] == "Song" {
 			//This is Song of Solomon book, special case where book name has multiple words
@@ -120,6 +138,9 @@ func CreateKJVDB(dbpath string) string {
 			verse.Text = strings.Join(brokenString[2:], " ")
 		}
 
+		verse.OrdinalBook = bookCount
+		verse.OrdinalVerse = verseCount
+		verse.Testament = bookTestament
 		fmt.Printf("verse: %v\n", verse)
 
 		dbInsert <- verse
