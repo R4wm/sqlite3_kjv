@@ -125,22 +125,22 @@ func CreateKJVDB(dbpath string) string {
 
 		if brokenString[0] == "Song" {
 			//This is Song of Solomon book, special case where book name has multiple words
-			verse.Book = fmt.Sprintf("%s %s %s", brokenString[0], brokenString[1], brokenString[2])
+			verse.Book = fmt.Sprintf("%s %s %s", strings.ToUpper(brokenString[0]), brokenString[1], brokenString[2])
 			verse.Chapter, verse.Verse = ParseChapterVerse(brokenString[3])
 			verse.Text = strings.Join(brokenString[4:], " ")
 		} else if IsNumberedBook(brokenString[0]) {
-			verse.Book = brokenString[0] + brokenString[1]
+			verse.Book = strings.ToUpper(brokenString[0] + brokenString[1])
 			verse.Chapter, verse.Verse = ParseChapterVerse(brokenString[2])
 			verse.Text = strings.Join(brokenString[3:], " ")
 		} else {
-			verse.Book = brokenString[0]
+			verse.Book = strings.ToUpper(brokenString[0])
 			verse.Chapter, verse.Verse = ParseChapterVerse(brokenString[1])
 			verse.Text = strings.Join(brokenString[2:], " ")
 		}
 
 		verse.OrdinalBook = bookCount
 		verse.OrdinalVerse = verseCount
-		verse.Testament = bookTestament
+		verse.Testament = strings.ToUpper(bookTestament)
 		fmt.Printf("verse: %v\n", verse)
 
 		dbInsert <- verse
