@@ -1,4 +1,4 @@
-package kjvapi
+package sqlite3_kjv
 
 import (
 	"fmt"
@@ -18,8 +18,8 @@ func TestGetChapter(t *testing.T) {
 			Text: "And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters."})
 
 	result := GetChapter(book, chapter, verses)
-	if fmt.Sprintf("%T", result) != "*kjvapi.KJVBook" {
-		t.Errorf("Expected *kjvapi.KJVBook, got %T\n", result)
+	if fmt.Sprintf("%T", result) != "*sqlite3_kjv.KJVBook" {
+		t.Errorf("Expected *sqlite3_kjv.KJVBook, got %T\n", result)
 	}
 
 	if result.Book != book {

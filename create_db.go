@@ -1,4 +1,4 @@
-package kjvapi
+package sqlite3_kjv
 
 import (
 	"bufio"

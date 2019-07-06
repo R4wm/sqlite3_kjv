@@ -1,4 +1,4 @@
-package kjvapi
+package sqlite3_kjv
 
 //KJVVerse simple container for verses
 type KJVVerse struct {
