@@ -1,98 +1,19 @@
-# kjvapi
+# sqlite3_kjv
 
-## Purpose
-The idea is to be able to query the bible from a RESTful API using go webserver as the backend
-
-The idea so far is
->nginx -> go web api -> redis 
-
-returning json formated results (super fast)
-
-To get the redis in memory db with kjv text, please see [kjv redis](https://github/r4wm/kjv)
-
-## Testing
+# Basic usage
 ```bash
-@arch-lt ~/go/src/github.com/r4wm/kjvapi> go test
-PASS
-ok  	github.com/r4wm/kjvapi	0.001s
-@arch-lt ~/go/src/github.com/r4wm/kjvapi> 
-```
-
-## Example (future usage)
-pretending for now the request fields came via http request, the verses would be fetched from redis db
-
-source
-```golang
-package main
-
-import (
-	"encoding/json"
-	"fmt"
-	"log"
-
-	"github.com/r4wm/kjvapi"
-)
-
-func main() {
-	var verses []kjvapi.KJVVerse
-	//Pretend the data came from http.Request
-	book := "Genesis"
-	chapter := 1
-    
-    //Assume verses came from redis lookup
-	verses = append(verses, kjvapi.KJVVerse{Verse: 1,
-		Text: "In the beginning God created the heaven and the earth."})
-
-	verses = append(verses, kjvapi.KJVVerse{Verse: 2,
-		Text: "And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters."})
-
-	result := kjvapi.GetChapter(book, chapter, verses)
-	jsonQuery, err := json.MarshalIndent(result, "", "  ")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("%s\n", jsonQuery)
-}
-```
-result
-
-```bash
-@arch-lt ~/go/src/github.com/r4wm> go run main.go
-{
-  "book": "Genesis",
-  "Chapters": [
-    {
-      "chapter": 1,
-      "Verses": [
-        {
-          "verse": 1,
-          "text": "In the beginning God created the heaven and the earth."
-        },
-        {
-          "verse": 2,
-          "text": "And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters."
-        }
-      ]
-    }
-  ]
-}
-@arch-lt ~/go/src/github.com/r4wm>
-```
-
-## Create your own KJV database
-```go
-package main
-
-import (
-	"fmt"
-
-	"github.com/r4wm/kjvapi"
-)
-
-func main() {
-	fmt.Println("Starting kjv database generation")
-	kjvapi.CreateKJVDB("/tmp/kjv.db")
-}
+ᚱ@elastic_kjv $ go get -v -u github.com/r4wm/elastic_kjv
+github.com/r4wm/elastic_kjv (download)
+github.com/mattn/go-sqlite3 (download)
+ᚱ@elastic_kjv $ 
+ᚱ@elastic_kjv $ 
+ᚱ@elastic_kjv $ go run cmd/main.go -dbPath /tmp/kjv.db 2&> /dev/null 
+ᚱ@elastic_kjv $ 
+ᚱ@elastic_kjv $ 
+ᚱ@elastic_kjv $ sqlite3 /tmp/kjv.db ".schema kjv"
+CREATE TABLE kjv(book string not null, chapter int, verse int, text string, ordinal_verse int, ordinal_book int, testament string);
+ᚱ@elastic_kjv $ 
+ᚱ@elastic_kjv $ sqlite3 /tmp/kjv.db "select text from kjv where book=\"GENESIS\" and chapter=1 and verse=1"
+In the beginning God created the heaven and the earth.
+ᚱ@elastic_kjv $ 
 ```
