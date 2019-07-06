@@ -13,6 +13,14 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+const (
+	sqlInsertStr = `INSERT OR REPLACE INTO kjv(book, chapter, verse, text, ordinal_verse, ordinal_book, testament) values(?, ?, ?, ?, ?, ?, ?)`
+)
+
+var (
+	url = "https://raw.githubusercontent.com/R4wm/sqlite3_kjv/master/data/bible.txt"
+)
+
 // Verse the complete verse context
 type Verse struct {
 	IsNumberedBook bool
@@ -72,7 +80,6 @@ func PrepareDB(verse <-chan Verse, dbPath string) {
 	statement, _ := database.Prepare("create table if not exists kjv(book string not null, chapter int, verse int, text string, ordinal_verse int, ordinal_book int, testament string)")
 	statement.Exec()
 
-	sqlInsertStr := `INSERT OR REPLACE INTO kjv(book, chapter, verse, text, ordinal_verse, ordinal_book, testament) values(?, ?, ?, ?, ?, ?, ?)`
 	stmt, err := database.Prepare(sqlInsertStr)
 	if err != nil {
 		panic(err)
@@ -86,10 +93,9 @@ func PrepareDB(verse <-chan Verse, dbPath string) {
 }
 
 //CreateKJVDB pulls down KJV raw text file, parses and creates database
-func CreateKJVDB(dbpath string) string {
+func CreateKJVDB(dbpath string) (string, error) {
 	fmt.Println("Starting sqlite3 db creation. ")
 
-	url := "https://raw.githubusercontent.com/R4wm/bible/master/data/bible.txt"
 	dbInsert := make(chan Verse)
 
 	resp, err := http.Get(url)
@@ -97,9 +103,13 @@ func CreateKJVDB(dbpath string) string {
 		panic(err)
 	}
 
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("%s path does not exist.\n", url)
+	}
 	defer resp.Body.Close()
 
 	go PrepareDB(dbInsert, dbpath)
+	defer close(dbInsert)
 
 	scanner := bufio.NewScanner(resp.Body)
 
@@ -151,7 +161,5 @@ func CreateKJVDB(dbpath string) string {
 		dbInsert <- verse
 	}
 
-	close(dbInsert)
-
-	return "dbpath"
+	return "dbpath", nil
 }
