@@ -161,5 +161,5 @@ func CreateKJVDB(dbpath string) (string, error) {
 		dbInsert <- verse
 	}
 
-	return "dbpath", nil
+	return dbpath, nil
 }
