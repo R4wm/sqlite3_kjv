@@ -17,9 +17,7 @@ const (
 	sqlInsertStr = `INSERT OR REPLACE INTO kjv(book, chapter, verse, text, ordinal_verse, ordinal_book, testament) values(?, ?, ?, ?, ?, ?, ?)`
 )
 
-var (
-	url = "https://raw.githubusercontent.com/R4wm/sqlite3_kjv/master/data/bible.txt"
-)
+var url = "https://raw.githubusercontent.com/R4wm/sqlite3_kjv/KJV_PCE/data/TEXT-KJV-PCE-127-TAB.txt"
 
 // Verse the complete verse context
 type Verse struct {
@@ -114,51 +112,46 @@ func CreateKJVDB(dbpath string) (string, error) {
 	scanner := bufio.NewScanner(resp.Body)
 
 	verseCount := 0
-	bookCount := 0
-	bookNameState := ""
-	bookTestament := "Old"
+	bookTestament := "OLD"
+
 	for scanner.Scan() {
 		verseCount += 1
 		verse := Verse{}
 		brokenString := strings.Fields(scanner.Text())
-		fmt.Println("broken: ", brokenString)
+		fmt.Println("Broken up string: ", brokenString)
 
-		// First book of the New Testament
-		if brokenString[0] == "Matthew" {
-			bookTestament = "New"
+		if brokenString[2] == "Matthew" {
+			bookTestament = "NEW"
 		}
 
-		if brokenString[0] != bookNameState {
-			bookNameState = brokenString[0]
-			bookCount += 1
-		}
-
+		// Special use case where title of book is multiple strings
 		if brokenString[0] == "Song" {
 			//This is Song of Solomon book, special case where book name has multiple words
 			verse.Book = fmt.Sprintf("%s %s %s",
-				strings.ToUpper(brokenString[0]), // SONG
-				strings.ToUpper(brokenString[1]), // OF
-				strings.ToUpper(brokenString[2])) // SOLOMON
+				strings.ToUpper(brokenString[2]), // SONG
+				strings.ToUpper(brokenString[3]), // OF
+				strings.ToUpper(brokenString[4])) // SOLOMON
 			verse.Chapter, verse.Verse = ParseChapterVerse(brokenString[3])
-			verse.Text = strings.Join(brokenString[4:], " ")
-
-		} else if IsNumberedBook(brokenString[0]) {
-			verse.Book = strings.ToUpper(brokenString[0] + brokenString[1])
-			verse.Chapter, verse.Verse = ParseChapterVerse(brokenString[2])
-			verse.Text = strings.Join(brokenString[3:], " ")
-
+			verse.Text = strings.Join(brokenString[7:], " ")
+		} else if IsNumberedBook(brokenString[2]) {
+			verse.Book = strings.ToUpper(brokenString[2] + brokenString[3])
+			verse.Chapter, _ = strconv.Atoi(brokenString[4])
+			verse.Verse, _ = strconv.Atoi(brokenString[5])
+			verse.Text = strings.Join(brokenString[6:], " ")
 		} else {
-			verse.Book = strings.ToUpper(brokenString[0])
-			verse.Chapter, verse.Verse = ParseChapterVerse(brokenString[1])
-			verse.Text = strings.Join(brokenString[2:], " ")
+			verse.Book = strings.ToUpper(brokenString[2])
+			verse.Chapter, _ = strconv.Atoi(brokenString[3])
+			verse.Verse, _ = strconv.Atoi(brokenString[4])
+			verse.Text = strings.Join(brokenString[5:], " ")
 		}
 
-		verse.OrdinalBook = bookCount
+		verse.OrdinalBook, _ = strconv.Atoi(brokenString[0])
 		verse.OrdinalVerse = verseCount
-		verse.Testament = strings.ToUpper(bookTestament)
-		fmt.Printf("verse: %v\n", verse)
+		verse.Testament = bookTestament
 
+		fmt.Printf("verse: %v\n", verse)
 		dbInsert <- verse
+
 	}
 
 	return dbpath, nil
