@@ -132,17 +132,20 @@ func CreateKJVDB(dbpath string) (string, error) {
 				strings.ToUpper(brokenString[3]), // OF
 				strings.ToUpper(brokenString[4])) // SOLOMON
 			verse.Chapter, verse.Verse = ParseChapterVerse(brokenString[3])
-			verse.Text = strings.Join(brokenString[7:], " ")
+			verse.Text = strings.ReplaceAll(strings.Join(brokenString[7:], " "), "<<", "-|")
+			verse.Text = strings.ReplaceAll(verse.Text, ">>", "|-")
 		} else if IsNumberedBook(brokenString[2]) {
 			verse.Book = strings.ToUpper(brokenString[2] + brokenString[3])
 			verse.Chapter, _ = strconv.Atoi(brokenString[4])
 			verse.Verse, _ = strconv.Atoi(brokenString[5])
-			verse.Text = strings.Join(brokenString[6:], " ")
+			verse.Text = strings.ReplaceAll(strings.Join(brokenString[6:], " "), "<<", "-|")
+			verse.Text = strings.ReplaceAll(verse.Text, ">>", "|-")
 		} else {
 			verse.Book = strings.ToUpper(brokenString[2])
 			verse.Chapter, _ = strconv.Atoi(brokenString[3])
 			verse.Verse, _ = strconv.Atoi(brokenString[4])
-			verse.Text = strings.Join(brokenString[5:], " ")
+			verse.Text = strings.ReplaceAll(strings.Join(brokenString[5:], " "), "<<", "-|")
+			verse.Text = strings.ReplaceAll(verse.Text, ">>", "|-")
 		}
 
 		verse.OrdinalBook, _ = strconv.Atoi(brokenString[0])
