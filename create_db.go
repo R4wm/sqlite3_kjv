@@ -32,7 +32,7 @@ type Verse struct {
 	OrdinalBook    int    `json:"ordinal_book"`
 }
 
-//ParseChapterVerse extract chapter and verse from x:x format
+// ParseChapterVerse extract chapter and verse from x:x format
 func ParseChapterVerse(colonJoined string) (int, int) {
 	fmt.Printf("colonJoined: %v\n", colonJoined)
 
@@ -61,7 +61,7 @@ func isNumberedBook(firstPart string) bool {
 	return false
 }
 
-//PrepareDB Inserts verse context into database. Note old db WILL be deleted.
+// PrepareDB Inserts verse context into database. Note old db WILL be deleted.
 func PrepareDB(verse <-chan Verse, dbPath string) {
 
 	// Delete old existing database
@@ -72,11 +72,19 @@ func PrepareDB(verse <-chan Verse, dbPath string) {
 	}
 
 	//Create new database
-	database, _ := sql.Open("sqlite3", dbPath) // "data/kjv.sqlite3.db")
+	database, err := sql.Open("sqlite3", dbPath) // "data/kjv.sqlite3.db")
+	if err != nil {
+		log.Print("ruh roh")
+		log.Fatal(err)
+	}
 	defer database.Close()
 
 	//Prep new database
-	statement, _ := database.Prepare("create table if not exists kjv(book string not null, chapter int, verse int, text string, ordinal_verse int, ordinal_book int, testament string)")
+	statement, err := database.Prepare("create table if not exists kjv(book string not null, chapter int, verse int, text string, ordinal_verse int, ordinal_book int, testament string)")
+	if err != nil {
+		log.Print("database.Prepare failed..")
+		log.Fatal(err)
+	}
 	statement.Exec()
 
 	stmt, err := database.Prepare(sqlInsertStr)
@@ -91,7 +99,7 @@ func PrepareDB(verse <-chan Verse, dbPath string) {
 	}
 }
 
-//CreateKJVDB pulls down KJV raw text file, parses and creates database
+// CreateKJVDB pulls down KJV raw text file, parses and creates database
 func CreateKJVDB(dbpath string) (string, error) {
 	fmt.Println("Starting sqlite3 db creation. ")
 
@@ -162,7 +170,7 @@ func CreateKJVDB(dbpath string) (string, error) {
 	return dbpath, nil
 }
 
-//CreateKJVJson pulls down KJV raw text file, parses and creates database
+// CreateKJVJson pulls down KJV raw text file, parses and creates database
 func CreateKJVJson(jsonPath string) (string, error) {
 	fmt.Println("Starting json creation. ")
 	resp, err := http.Get(url)
